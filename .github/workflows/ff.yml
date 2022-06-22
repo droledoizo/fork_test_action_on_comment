@@ -18,7 +18,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'pintolab succeeded! ✅ ${{ github.event.comments_url }}, ${{ github.event.pull_request.comments_url }}',
+              body: 'pintolab succeeded! ✅✅ [' + ${{ github.event.comments_url }} + '][' + ${{ github.event.pull_request.comments_url }}+ ']',
             }); 
       - name: Add comment to PR
         env:
