@@ -35,6 +35,7 @@ jobs:
           URL: ${{ github.event.comments_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          env | sort
           curl \
             -X POST \
             "${URL}" \
