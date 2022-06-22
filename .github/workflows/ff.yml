@@ -18,11 +18,11 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'pintolab succeeded! ✅',
+              body: 'pintolab succeeded! ✅ ${{ github.event.comments_url }}, ${{ github.event.pull_request.comments_url }}',
             }); 
       - name: Add comment to PR
         env:
-          URL: ${{ github.event.pull_request.comments_url }}
+          URL: ${{ github.event.comments_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl \
