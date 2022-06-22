@@ -6,10 +6,21 @@ on:
       - created
 
 jobs:
-  comment:
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/pintolab'}}
-    runs-on: ubuntu-latest
+  rebase:
+    name: Rebase
+    runs-on: ubuntu-latest    
+    if: >-
+      github.event.issue.pull_request != '' && (contains(github.event.comment.body, '/pintolab')
     steps:
+      - name: Checkout the latest code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+      - name: Automatic Rebase
+        uses: cirrus-actions/rebase@1.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Message
         uses: actions/github-script@v4
         with:
@@ -18,7 +29,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'pintolab succeeded! ✅✅ [' + ${{ github.event.comments_url }} + '][' + ${{ github.event.pull_request.comments_url }}+ ']',
+              body: 'pintolab succeeded! ✅✅✅',
             }); 
       - name: Add comment to PR
         env:
@@ -27,7 +38,7 @@ jobs:
         run: |
           curl \
             -X POST \
-            $URL \
+            "${URL}" \
             -H "Content-Type: application/json" \
-            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
             --data '{ "body": "blah blah" }'
