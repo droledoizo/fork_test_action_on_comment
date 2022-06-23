@@ -36,6 +36,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           env | sort
+          echo ########
+          echo ${{ github }}
+          echo ########
           curl \
             -X POST \
             "${URL}" \
