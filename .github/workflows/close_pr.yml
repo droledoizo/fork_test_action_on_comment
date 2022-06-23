@@ -16,20 +16,22 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
-      - name: Automatic Rebase
-        uses: cirrus-actions/rebase@1.7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Message
-        uses: actions/github-script@v4
+      - name: Fast forward merge
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            echo ${{ github.event.payload }}
+      - name: Message
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'pintolab succeeded! ✅✅✅ new',
-            }); 
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '👋 Thanks for reporting!'
+          })
       - name: Add comment to PR
         env:
           URL: ${{ github.event.comments_url }}
