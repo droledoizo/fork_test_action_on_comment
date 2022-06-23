@@ -31,7 +31,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: '👋 Thanks for reporting!'
-          })
+            })
       - name: Add comment to PR
         env:
           URL: ${{ github.event.comments_url }}
