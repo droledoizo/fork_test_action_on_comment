@@ -20,7 +20,7 @@ jobs:
         env:
           github-token: ${{secrets.GITHUB_TOKEN}}
         run: |
-            echo ${{ github.event.payload }}
+            echo "github.event.payload=[${{ github.event.payload }}]"
       - name: Message
         uses: actions/github-script@v3
         with:
