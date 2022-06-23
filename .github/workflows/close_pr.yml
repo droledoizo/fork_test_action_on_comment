@@ -28,7 +28,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'pintolab succeeded! ✅✅✅',
+              body: 'pintolab succeeded! ✅✅✅ master',
             }); 
       - name: Add comment to PR
         env:
