@@ -17,9 +17,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
       - name: Fast forward merge
-        with:
+        env:
           github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
+        run: |
             echo ${{ github.event.payload }}
       - name: Message
         uses: actions/github-script@v3
