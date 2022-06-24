@@ -45,12 +45,12 @@ jobs:
             
             
             echo "> rebase branch from master"
-            (git rebases origin/main 2&>1 && exit_code=0 || exit_code=1) | tee result
+            git rebases origin/main && exit_code=0 || exit_code=1
             
             if [ ${exit_code} -eq 0 ] ; then
                 comment="❌ Rebase ${GITHUB_REPOSITORY} from ${GITHUB_REPOSITORY_OWNER}/main branch fails."
                 echo "  - ${comment}"
-                gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs.<br><br>$(cat result)"
+                gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 exit ${exit_code}
             else
                 comment="✅ Rebase from master done."
