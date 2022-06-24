@@ -42,7 +42,7 @@ jobs:
             # rebase branch from master
             
             # rebase from master
-            git rebase origin/master && exit_code=0 || exit_code=1
+            git rebase origin/main && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 gh issue comment $PR_URL --body "❌ Rebase from master branch fails, please read action logs."
                 exit ${exit_code}
