@@ -85,13 +85,14 @@ jobs:
 
       - name: Check if source branch is rebased from target branch
         run: |
-            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee remaining_commits.txt
-            diff_count=$(grep -c ^+ remaining_commits || true)
+            remaining_commits_file="remaining_commits.txt"
+            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee "${remaining_commits_file}"
+            diff_count=$(grep -c ^+ "${remaining_commits_file}" || true)
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
             else
-                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" remaining_commits.txt)"
+                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" "${remaining_commits_file}")"
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
@@ -99,7 +100,8 @@ jobs:
 
       - name: Get new commits list
         run: |
-            git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee new_commits.txt
+           new_commits_file="new_commits.txt"
+            git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee "${new_commits_file}"
 
       - name: Merge fast forward head ref to base ref 
         run: |
@@ -116,5 +118,5 @@ jobs:
             else
                 comment="✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge."
                 echo "  - ${comment}"
-                gh pr comment "${PR_NUMBER}" --body "${comment}. List of commits merged into \`${{ env.HEAD_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" new_commits.txt)"               
+                gh pr comment "${PR_NUMBER}" --body "${comment}. List of commits merged into \`${{ env.HEAD_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" "${new_commits_file}")"               
             fi
