@@ -31,8 +31,8 @@ jobs:
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             echo "comment_user_permission=${comment_user_permission}"
-            if [ "${comment_user_permission}" != "adminn" ] ; then
-                comment="❌ Sorry ${COMMENT_USER_LOGIN}, you are not allowed to accept this PR because you do not have admin permission (your actual permission is [${comment_user_permission}]."
+            if [ "${comment_user_permission}" != "admin" ] ; then
+                comment="❌ Sorry ${COMMENT_USER_LOGIN}, you are not allowed to accept this PR because you do not have admin permission (your actual permission is [${comment_user_permission}])."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
