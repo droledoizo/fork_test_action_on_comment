@@ -11,11 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
+      - name: Get PR detail
+        run: |
+            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
+            export HEAD_REF=$(jq -rc .head.ref pr_detail.json)
+            export BASE_REF=$(jq -rc .base.ref pr_detail.json)
+            export PR_STATE=$(jq -rc .state pr_detail.json)
+            export PR_LOCKED=$(jq -rc .locked pr_detail.json)
+            export PR_DRAFT=$(jq -rc .draft pr_detail.json)
+            export PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)          
       - name: Checkout the latest code
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          ref: ${HEAD_REF}
       - name: rebase-from-master
         env:
           GIT_TRACE: true
@@ -26,21 +36,12 @@ jobs:
           PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
+            echo "PR_STATE=${pr_state}"
+            echo "PR_LOCKED=${pr_locked}"
+            echo "PR_DRAFT=${pr_draft}"
+            echo "PR_MERGEABLE=${pr_mergeable}"         
             echo "${GITHUB_CONTEXT}"
             env | sort
-
-            echo "> get PR detail"
-            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
-            head_ref=$(jq -rc .head.ref pr_detail.json)
-            base_ref=$(jq -rc .base.ref pr_detail.json)
-            pr_state=$(jq -rc .state pr_detail.json)
-            pr_locked=$(jq -rc .locked pr_detail.json)
-            pr_draft=$(jq -rc .draft pr_detail.json)
-            pr_mergeable=$(jq -rc .mergeable pr_detail.json)
-            echo "pr_state=${pr_state}"
-            echo "pr_locked=${pr_locked}"
-            echo "pr_draft=${pr_draft}"
-            echo "pr_mergeable=${pr_mergeable}"
 
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
@@ -56,7 +57,6 @@ jobs:
             fi
 
             echo "> check if pull request is opened and ready"
-
 
             set -x
             echo "> rebase branch from master"
