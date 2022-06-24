@@ -26,7 +26,7 @@ jobs:
             echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
             echo "OWNER=${OWNER}"
             echo "REPO=${REPO}"
-            echo"PR_NUMBER=${PR_NUMBER}"
+            echo "PR_NUMBER=${PR_NUMBER}"
             gh --version
             gh auth status
       - name: Message
