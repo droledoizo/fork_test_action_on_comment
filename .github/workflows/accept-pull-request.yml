@@ -22,12 +22,12 @@ jobs:
       - name: Get pull request details      
         run: |
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
-            echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" >> $GITHUB_ENV
-            echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_STATE=$(jq -rc .state pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" >> $GITHUB_ENV
+            echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "PR_STATE=$(jq -rc .state pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
 
       - name: Check comment user permission
         run: |
@@ -48,30 +48,46 @@ jobs:
           ref: ${{ env.HEAD_REF }}
           fetch-depth: 0
 
-      - name: Check if pull request is open
+      - name: Check if pull request state is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
                 comment="✅ Pull request is open."
                 echo "  - ${comment}"
             else
-                  comment="❌ Can not accept this pull request because it is not open (actual state=${{ env.PR_STATE }})."
+                comment="❌ Can not accept this pull request because it is not open (actual state=${{ env.PR_STATE }})."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
             fi
 
-      - name: Check if PR is mergeable
+      - name: Check if pull request is ready
         run: |
-            echo toto
+            if [ "${{ env.PR_DRAFT }}" = "false" ] ; then
+                comment="✅ Pull request is not draft."
+                echo "  - ${comment}"
+            else
+                comment="❌ Can not accept this pull request because it is still in draft."
+                echo "  - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment}"
+                exit 1         
+            fi
+
+      - name: Check if pull request is mergeable
+        run: |
+            if [ "${{ env.PR_MERGEABLE }}" = "false" ] ; then
+                comment="✅ Pull request is mergeable."
+                echo "  - ${comment}"
+            else
+                comment="❌Pull request is not mergeable, please check conflicts with target \`${{ env.BASE_REF }}\` branch and pull request messages."
+                echo "  - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment}"
+                exit 1         
+            fi
 
       - name: Check if source branch is rebased from target branch
         run: |
             git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt
-            echo "grep -c"
-            grep -c ^+ git_diff.txt || true
-            echo "exit_code=$?"
             diff_count=$(grep -c ^+ git_diff.txt || true)
-            echo "${diff_count}"
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
