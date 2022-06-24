@@ -22,11 +22,13 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.issue.number }}
+          ISSUE: ${{ github.event.issue.html_url }}
         run: |
             echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
             echo "OWNER=${OWNER}"
             echo "REPO=${REPO}"
             echo "PR_NUMBER=${PR_NUMBER}"
+            echo "ISSUE=${ISSUE}"
             gh --version
             gh auth status
       - name: Message
