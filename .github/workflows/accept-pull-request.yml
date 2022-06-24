@@ -19,7 +19,7 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
 
-      - name: Get pull request details      
+      - name: Init all external vars       
         run: |
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
             echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" | tee -a $GITHUB_ENV
@@ -27,6 +27,8 @@ jobs:
             echo "PR_STATE=$(jq -rc .state pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
+            echo "REMAINING_COMMITS_FILE=remaining_commits.txt" | tee -a $GITHUB_ENV            
+            echo "NEW_COMMITS_FILE=new_commits.txt" | tee -a $GITHUB_ENV
 
       - name: Check comment user permission
         run: |
@@ -85,14 +87,13 @@ jobs:
 
       - name: Check if source branch is rebased from target branch
         run: |
-            remaining_commits_file="remaining_commits.txt"
-            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee "${remaining_commits_file}"
-            diff_count=$(grep -c ^+ "${remaining_commits_file}" || true)
+            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee "${{ env.REMAINING_COMMITS_FILE }}"
+            diff_count=$(grep -c ^+ ${{ env.REMAINING_COMMITS_FILE }} || true)
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
             else
-                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br>$(echo ; sed "s/+/-/g" "${remaining_commits_file}")"
+                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br>$(echo ; sed "s/+/-/g" ${{ env.REMAINING_COMMITS_FILE }})"
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
@@ -100,9 +101,7 @@ jobs:
 
       - name: Get new commits list
         run: |
-            new_commits_file="new_commits.txt"
-            git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee "${new_commits_file}"
-            echo "new_commits_file=${new_commits_file}" | tee -a $GITHUB_ENV
+            git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee ${{ env.NEW_COMMITS_FILE }}
 
       - name: Merge fast forward head ref to base ref 
         run: |
@@ -111,7 +110,7 @@ jobs:
       - name: Close pull request
         run: |
             comment="✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge."
-            gh pr close "${PR_NUMBER}" --comment "${comment}.<br><br>\# List of commits merged into \`${{ env.BASE_REF }}\` branch:<br>$(echo ; sed "s/+/-/g" ${{ env.new_commits_file }})" && exit_code=0 || exit_code=1
+            gh pr close "${PR_NUMBER}" --comment "${comment}.<br><br>\# List of commits merged into \`${{ env.BASE_REF }}\` branch:<br>$(echo ; sed "s/+/-/g" ${{ env.NEW_COMMITS_FILE }})" && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 echo "  - ${comment}"     
             else
