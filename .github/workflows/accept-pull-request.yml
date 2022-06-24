@@ -94,7 +94,7 @@ jobs:
                 comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" remaining_commits.txt)"
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
-                exit ${diff_count}
+                exit 1
             fi
 
       - name: Get new commits list
