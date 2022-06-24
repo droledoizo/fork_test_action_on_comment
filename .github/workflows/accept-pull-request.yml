@@ -7,8 +7,7 @@ on:
 
 jobs:
   accept-pull-request:
-    env:
-      GITHUB_CONTEXT: ${{ toJson(github) }}    
+    env:   
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OWNER: ${{ github.repository_owner }}
       REPO: ${{ github.event.repository.name }}
@@ -29,6 +28,17 @@ jobs:
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
             echo "REMAINING_COMMITS_FILE=remaining_commits.txt" | tee -a $GITHUB_ENV            
             echo "NEW_COMMITS_FILE=new_commits.txt" | tee -a $GITHUB_ENV
+            echo "GITHUB_CONTEXT=${{ toJson(github) }}" | tee -a $GITHUB_ENV
+            echo "ENV_CONTEXT= ${{ toJson(env) }}" | tee -a $GITHUB_ENV
+            echo "JOB_CONTEXT= ${{ toJson(job) }}" | tee -a $GITHUB_ENV    
+            echo "STEPS_CONTEXT= ${{ toJson(steps) }}" | tee -a $GITHUB_ENV
+            echo "RUNNER_CONTEXT= ${{ toJson(runner) }}" | tee -a $GITHUB_ENV
+            echo "SECRETS_CONTEXT= ${{ toJson(secrets) }}" | tee -a $GITHUB_ENV
+            echo "STRATEGY_CONTEXT= ${{ toJson(strategy) }}" | tee -a $GITHUB_ENV
+            echo "MATRIX_CONTEXT= ${{ toJson(matric) }}" | tee -a $GITHUB_ENV
+            echo "NEEDS_CONTEXT= ${{ toJson(needs) }}" | tee -a $GITHUB_ENV
+            echo "INPUTS_CONTEXT= ${{ toJson(inputs) }} " | tee -a $GITHUB_ENV
+            cat "${GITHUB_ENV}"
 
       - name: Check comment user permission
         run: |
