@@ -26,7 +26,7 @@ jobs:
                 comment="✅ You are allowed to accept PR"
                 echo "  - ${comment}"
             else
-                comment="❌ Sorry ${COMMENT_USER_LOGIN}, you are not allowed to accept this PR because you do not have admin permission (your actual permission is [${comment_user_permission}])."
+                comment="❌ Sorry \`${COMMENT_USER_LOGIN}\`, you are not allowed to accept this PR because you do not have admin permission (your actual permission is [${comment_user_permission}])."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
@@ -83,6 +83,16 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 exit ${exit_code}
             fi
+            git pull --rebase && exit_code=0 || exit_code=1
+            if [ ${exit_code} -eq 0 ] ; then
+                comment="✅ Pull after rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} succeeds."
+                echo "  - ${comment}"
+            else
+                comment="❌  Pull after rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} fails."
+                echo "  - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
+                exit ${exit_code}
+            fi            
             git push && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 comment="✅ Push rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} succeeds."
