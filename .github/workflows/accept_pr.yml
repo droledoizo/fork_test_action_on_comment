@@ -24,17 +24,16 @@ jobs:
           REPO: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.issue.number }}
           PR_URL: ${{ github.event.issue.html_url }}
-          EVENT_ACTOR: ${{ github.event.issue.actor.name }}
+          COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
             # debug
-            echo "GITHUB_TOKEN=${GITHUB_TOKEN}, OWNER=${OWNER}, REPO=${REPO}, PR_NUMBER=${PR_NUMBER}, PR_URL=${PR_URL}, EVENT_ACTOR=${EVENT_ACTOR}"
-            echo -e "GITHUB_CONTEXT:\n${GITHUB_CONTEXT}\n"
+            echo "GITHUB_TOKEN=${GITHUB_TOKEN}, OWNER=${OWNER}, REPO=${REPO}, PR_NUMBER=${PR_NUMBER}, PR_URL=${PR_URL}, COMMENT_USER_LOGIN=${COMMENT_USER_LOGIN}"
             
             # check if user is allowed to merge
-            event_actor_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
-            echo "event_actor_permission=${event_actor_permission}"
-            if [ "${event_actor_permission}" != "admin" ] ; then
-                gh pr comment $PR_URL --body "❌ Sorry lepapareil, but you are not allowed to accept this PR."
+            comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
+            echo "comment_user_permission=${comment_user_permission}"
+            if [ "${comment_user_permission}" != "adminn" ] ; then
+                gh pr comment "${PR_NUMBER}" --body "❌ Sorry lepapareil, but you are not allowed to accept this PR."
                 exit 1
             fi
             
