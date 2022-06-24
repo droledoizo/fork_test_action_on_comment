@@ -13,7 +13,10 @@ jobs:
     steps:
       - name: Get PR detail
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.issue.number }}          
         run: |
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
             export HEAD_REF=$(jq -rc .head.ref pr_detail.json)
