@@ -29,6 +29,7 @@ jobs:
             env | sort
             
             echo "> get PR detail"
+            set -x
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
             head_ref=$(jq -rc .head.ref pr_detail.json)
             base_ref=$(jq -rc .base.ref pr_detail.json)
@@ -37,6 +38,7 @@ jobs:
             pr_draft=$(jq -rc .draft pr_detail.json)
             pr_mergeable=$(jq -rc .mergeable pr_detail.json)
             env | grep pr_
+            set +x
 
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
