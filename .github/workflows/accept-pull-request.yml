@@ -8,6 +8,7 @@ on:
 jobs:
   accept-pull-request:
     env:
+      GIT_TRACE: true
       GITHUB_CONTEXT: ${{ toJson(github) }}    
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OWNER: ${{ github.repository_owner }}
@@ -108,7 +109,7 @@ jobs:
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git merge origin/${{ env.HEAD_REF }} --ff-only
-            git log --max-count=20
+            git log --max-count=20 --graph
             git push
 
       - name: Close pull request
