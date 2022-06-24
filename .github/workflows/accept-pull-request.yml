@@ -25,7 +25,6 @@ jobs:
             echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" | tee -a $GITHUB_ENV
             echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_STATE=$(jq -rc .state pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
 
@@ -74,7 +73,7 @@ jobs:
 
       - name: Check if pull request is mergeable
         run: |
-            if [ "${{ env.PR_MERGEABLE }}" = "false" ] ; then
+            if [ "${{ env.PR_MERGEABLE }}" = "true" ] ; then
                 comment="✅ Pull request is mergeable."
                 echo "  - ${comment}"
             else
