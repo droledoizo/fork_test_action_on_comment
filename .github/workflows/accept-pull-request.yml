@@ -35,7 +35,7 @@ jobs:
             echo "RUNNER_CONTEXT= ${{ toJson(runner) }}" | tee -a $GITHUB_ENV
             echo "SECRETS_CONTEXT= ${{ toJson(secrets) }}" | tee -a $GITHUB_ENV
             echo "STRATEGY_CONTEXT= ${{ toJson(strategy) }}" | tee -a $GITHUB_ENV
-            echo "MATRIX_CONTEXT= ${{ toJson(matric) }}" | tee -a $GITHUB_ENV
+            echo "MATRIX_CONTEXT= ${{ toJson(matrix) }}" | tee -a $GITHUB_ENV
             echo "NEEDS_CONTEXT= ${{ toJson(needs) }}" | tee -a $GITHUB_ENV
             echo "INPUTS_CONTEXT= ${{ toJson(inputs) }} " | tee -a $GITHUB_ENV
             cat "${GITHUB_ENV}"
