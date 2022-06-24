@@ -100,6 +100,7 @@ jobs:
       - name: Get new commits list
         run: |
             git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} > new_commits.txt
+            cat new_commits.txt
 
       - name: Merge fast forward head ref to base ref 
         run: |
@@ -107,4 +108,4 @@ jobs:
 
       - name: Close pull request
         run: |
-            gh pr comment "${PR_NUMBER}" --body "✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge, appending thoses commits to \`${{ env.HEAD_REF }}\` branch:<br><bt>$(echo ; sed "s/+/-/g" news_commits.txt)"
+            gh pr comment "${PR_NUMBER}" --body "✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge, appending thoses commits to \`${{ env.BASE_REF }}\` branch:<br><bt>$(echo ; sed "s/+/-/g" news_commits.txt)"
