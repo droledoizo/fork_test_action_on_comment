@@ -18,12 +18,16 @@ jobs:
           fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
       - name: Fast forward merge
         env:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          github-event-issue-number: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.issue.number }}
         run: |
-            echo "github.event.issue.number=${{ github.event.issue.number }}"
+            echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
+            echo "OWNER=${OWNER}"
+            echo "REPO=${REPO}"
+            echo"PR_NUMBER=${PR_NUMBER}"
             gh --version
-            echo "${github-event-issue-number}" | gh auth login --with-token
             gh auth status
       - name: Message
         uses: actions/github-script@v3
