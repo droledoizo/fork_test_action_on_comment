@@ -42,18 +42,6 @@ jobs:
             echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" >> $GITHUB_ENV
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" >> $GITHUB_ENV
         
-      - name: Debug
-        run: |
-            echo "env.HEAD_REF=${{ env.HEAD_REF }}"
-            echo "env.BASE_REF=${{ env.BASE_REF }}"
-            echo "env.PR_STATE=${{ env.PR_STATE }}"
-            echo "env.PR_LOCKED=${{ env.PR_LOCKED }}"
-            echo "env.PR_DRAFT=${{ env.PR_DRAFT }}"
-            echo "env.PR_MERGEABLE=${{ env.PR_MERGEABLE }}"
-            echo "env.PR_NUMBER=${{ env.PR_NUMBER }}"
-            echo "${GITHUB_CONTEXT}"
-            env | sort
-
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -76,7 +64,7 @@ jobs:
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
             else
-                comment="❌ You have to rebase ${{ env.HEAD_REF }} from ${{ env.BASE_REF }} first because there are new commits on ${{ env.BASE_REF }}:<br><br>$(cat git_diff.txt)"
+                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target ${{ env.BASE_REF }} branch:<br><br>$(sed "s/+/-/g" git_diff.txt)"
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit ${exit_code}
