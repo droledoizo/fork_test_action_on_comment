@@ -85,8 +85,8 @@ jobs:
 
       - name: Check if source branch is rebased from target branch
         run: |
-            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt
-            diff_count=$(grep -c ^+ git_diff.txt || true)
+            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > remaining_commits.txt
+            diff_count=$(grep -c ^+ remaining_commits || true)
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
@@ -97,6 +97,12 @@ jobs:
                 exit ${diff_count}
             fi
 
+
+      - name: Get new commits list
+        run: |
+            git log --oneline --cherry origin/${{ env.BASE_REF }}.origin/${{ env.HEAD_REF }} > new_commits.txt
+            cat new_commits.txt
+
       - name: Merge fast forward head ref to base ref 
         run: |
-            echo toto
+            gh pr comment "${PR_NUMBER}" --body "Remaning commits $(cat new_commits.txt)"
