@@ -40,7 +40,6 @@ jobs:
             echo "pr_locked=${pr_locked}"
             echo "pr_draft=${pr_draft}"
             echo "pr_mergeable=${pr_mergeable}"
-            exit
 
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
