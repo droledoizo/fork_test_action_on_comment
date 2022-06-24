@@ -7,7 +7,8 @@ on:
 
 jobs:
   accept-pull-request:
-    env:   
+    env:
+      GITHUB_CONTEXT: ${{ toJson(github) }}    
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       OWNER: ${{ github.repository_owner }}
       REPO: ${{ github.event.repository.name }}
@@ -20,7 +21,8 @@ jobs:
 
       - name: Init all external vars       
         run: |
-            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
+            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
+            jq . pr_detail.json
             echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" | tee -a $GITHUB_ENV
             echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" | tee -a $GITHUB_ENV
             echo "PR_STATE=$(jq -rc .state pr_detail.json)" | tee -a $GITHUB_ENV
@@ -28,18 +30,6 @@ jobs:
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
             echo "REMAINING_COMMITS_FILE=remaining_commits.txt" | tee -a $GITHUB_ENV            
             echo "NEW_COMMITS_FILE=new_commits.txt" | tee -a $GITHUB_ENV
-            echo "GITHUB_CONTEXT=${{ toJson(github) }}" | tee -a $GITHUB_ENV
-            echo "ENV_CONTEXT= ${{ toJson(env) }}" | tee -a $GITHUB_ENV
-            echo "JOB_CONTEXT= ${{ toJson(job) }}" | tee -a $GITHUB_ENV    
-            echo "STEPS_CONTEXT= ${{ toJson(steps) }}" | tee -a $GITHUB_ENV
-            echo "RUNNER_CONTEXT= ${{ toJson(runner) }}" | tee -a $GITHUB_ENV
-            echo "SECRETS_CONTEXT= ${{ toJson(secrets) }}" | tee -a $GITHUB_ENV
-            echo "STRATEGY_CONTEXT= ${{ toJson(strategy) }}" | tee -a $GITHUB_ENV
-            echo "MATRIX_CONTEXT= ${{ toJson(matrix) }}" | tee -a $GITHUB_ENV
-            echo "NEEDS_CONTEXT= ${{ toJson(needs) }}" | tee -a $GITHUB_ENV
-            echo "INPUTS_CONTEXT= ${{ toJson(inputs) }} " | tee -a $GITHUB_ENV
-            cat "${GITHUB_ENV}"
-
       - name: Check comment user permission
         run: |
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
@@ -52,7 +42,6 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
             fi
-
       - name: Check if pull request state is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
@@ -64,7 +53,6 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
             fi
-
       - name: Check if pull request is ready
         run: |
             if [ "${{ env.PR_DRAFT }}" = "false" ] ; then
@@ -76,7 +64,6 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
             fi
-
       - name: Check if pull request is mergeable
         run: |
             if [ "${{ env.PR_MERGEABLE }}" = "true" ] ; then
@@ -88,7 +75,6 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
             fi
-
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -108,11 +94,9 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
             fi
-
       - name: Get new commits list
         run: |
             git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee ${{ env.NEW_COMMITS_FILE }}
-
       - name: Merge fast forward head ref to base ref 
         run: |
             git config --local user.email "action@github.com"
@@ -137,7 +121,6 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
             fi             
-
       - name: Close pull request
         run: |
             comment="✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge."
