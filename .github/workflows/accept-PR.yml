@@ -19,28 +19,6 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
 
-      - name: Get PR details      
-        run: |
-            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
-            echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" >> $GITHUB_ENV
-            echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_STATE=$(jq -rc .state pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" >> $GITHUB_ENV
-            echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" >> $GITHUB_ENV
-
-      - name: Check PR details vars
-        run: |
-            echo "env.HEAD_REF=${{ env.HEAD_REF }}"
-            echo "env.BASE_REF=${{ env.BASE_REF }}"
-            echo "env.PR_STATE=${{ env.PR_STATE }}"
-            echo "env.PR_LOCKED=${{ env.PR_LOCKED }}"
-            echo "env.PR_DRAFT=${{ env.PR_DRAFT }}"
-            echo "env.PR_MERGEABLE=${{ env.PR_MERGEABLE }}"
-            echo "env.PR_NUMBER=${{ env.PR_NUMBER }}"
-            echo "${GITHUB_CONTEXT}"
-            env | sort
-
       - name: Check comment user permission
         run: |
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
@@ -53,6 +31,35 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
             fi
+
+      - name: Get PR details      
+        run: |
+            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
+            echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" >> $GITHUB_ENV
+            echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" >> $GITHUB_ENV
+            echo "PR_STATE=$(jq -rc .state pr_detail.json)" >> $GITHUB_ENV
+            echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" >> $GITHUB_ENV
+            echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" >> $GITHUB_ENV
+            echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" >> $GITHUB_ENV
+        
+      - name: Debug
+        run: |
+            echo "env.HEAD_REF=${{ env.HEAD_REF }}"
+            echo "env.BASE_REF=${{ env.BASE_REF }}"
+            echo "env.PR_STATE=${{ env.PR_STATE }}"
+            echo "env.PR_LOCKED=${{ env.PR_LOCKED }}"
+            echo "env.PR_DRAFT=${{ env.PR_DRAFT }}"
+            echo "env.PR_MERGEABLE=${{ env.PR_MERGEABLE }}"
+            echo "env.PR_NUMBER=${{ env.PR_NUMBER }}"
+            echo "${GITHUB_CONTEXT}"
+            env | sort
+
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.HEAD_REF }}
+          fetch-depth: 0
 
       - name: Check if PR is open
         run: |
