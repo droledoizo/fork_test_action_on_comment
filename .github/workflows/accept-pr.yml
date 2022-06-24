@@ -35,7 +35,7 @@ jobs:
             pr_state=$(jq -rc .state pr_detail.json)
             pr_locked=$(jq -rc .locked pr_detail.json)
             pr_draft=$(jq -rc .draft pr_detail.json)
-            pr_mergeable_state=$(jq -rc .mergeable_state pr_detail.json)
+            pr_mergeable=$(jq -rc .mergeable pr_detail.json)
             env | grep pr_
 
             echo "> check if user is allowed to merge"
