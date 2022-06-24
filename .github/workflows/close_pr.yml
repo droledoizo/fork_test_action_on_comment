@@ -1,4 +1,4 @@
-name: fast-forward
+name: rebase-from-master-and-fast-forward-to-master
 
 on:
   issue_comment:
@@ -7,53 +7,41 @@ on:
 
 jobs:
   rebase:
-    name: Rebase
+    name: rebase-from-master-and-fast-forward-to-master
     runs-on: ubuntu-latest    
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/pintolab'}}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/rebase and merge'}}
     steps:
       - name: Checkout the latest code
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
-      - name: Fast forward merge
+          fetch-depth: 0
+      - name: rebase-from-master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.issue.number }}
-          ISSUE: ${{ github.event.issue.html_url }}
+          PR_URL: ${{ github.event.issue.html_url }}
+          EVENT_ACTOR: ${{ github.event.issue.actor }}
         run: |
-            echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
-            echo "OWNER=${OWNER}"
-            echo "REPO=${REPO}"
-            echo "PR_NUMBER=${PR_NUMBER}"
-            echo "ISSUE=${ISSUE}"
-            gh --version
-            gh auth status
-      - name: Message
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: '👋 Thanks for reporting!'
-            })
-      - name: Add comment to PR
-        env:
-          URL: ${{ github.event.comments_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          env | sort
-          echo ########
-          echo ${{ github }}
-          echo ########
-          curl \
-            -X POST \
-            "${URL}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
-            --data '{ "body": "blah blah" }'
+            # debug
+            echo "GITHUB_TOKEN=${GITHUB_TOKEN}, OWNER=${OWNER}, REPO=${REPO}, PR_NUMBER=${PR_NUMBER}, PR_URL=${PR_URL}, EVENT_ACTOR=${EVENT_ACTOR}"
+            
+            # check if user is allowed to merge
+            gh api repos/${OWNER}/${REPO}/collaborators/lepapareil/permission -q .permission  && exit_code=0 || exit_code=1
+            
+            # check if pull request is opened
+            # check if pull request is ready
+            # rebase branch from master
+            
+            # rebase from master
+            git rebase origin/master && exit_code=0 || exit_code=1
+            if [ ${exit_code} -eq 0 ] ; then
+                gh issue comment $PR_URL --body "rebase from master ✅"
+                exit ${exit_code}
+            else
+                gh issue comment $PR_URL --body "rebase from master ✅"
+            fi
+            
+            # fast-forward into master
