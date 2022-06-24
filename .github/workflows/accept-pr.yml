@@ -1,4 +1,4 @@
-name: rebase-from-master-and-fast-forward-to-master
+name: accept-pr
 
 on:
   issue_comment:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   rebase:
-    name: rebase-from-master-and-fast-forward-to-master
+    name: accept-pr
     runs-on: ubuntu-latest    
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
@@ -23,32 +23,34 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.issue.number }}
-          PR_URL: ${{ github.event.issue.html_url }}
           COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
-        run: |
-            # debug
-            echo "GITHUB_TOKEN=${GITHUB_TOKEN}, OWNER=${OWNER}, REPO=${REPO}, PR_NUMBER=${PR_NUMBER}, PR_URL=${PR_URL}, COMMENT_USER_LOGIN=${COMMENT_USER_LOGIN}"
+        run: |     
+            # echo "${GITHUB_CONTEXT}"
             
-            # check if user is allowed to merge
+            echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             echo "comment_user_permission=${comment_user_permission}"
             if [ "${comment_user_permission}" != "adminn" ] ; then
-                gh pr comment "${PR_NUMBER}" --body "❌ Sorry lepapareil, but you are not allowed to accept this PR."
+                comment="❌ Sorry lepapareil, but you are not allowed to accept this PR."
+                echo "    - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
             fi
             
-            # check if pull request is opened and ready
+            echo "> check if pull request is opened and ready"
             
             
-            # rebase branch from master
-            
-            # rebase from master
+            echo "> rebase branch from master"
             git rebase origin/main && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
-                gh issue comment $PR_URL --body "❌ Rebase from master branch fails, please read action logs."
+                comment="❌ Rebase from master branch fails, please read action logs."
+                echo "    - ${comment}"
+                gh issue comment $PR_URL --body "${comment}"
                 exit ${exit_code}
             else
-                gh issue comment $PR_URL --body "✅ Rebase from master done."
+                comment="✅ Rebase from master done."
+                echo "    - ${comment}"
+                gh issue comment $PR_URL --body "${comment}"
             fi
             
-            # fast-forward into master
+            echo "> fast-forward into master"
