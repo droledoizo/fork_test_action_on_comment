@@ -43,12 +43,6 @@ jobs:
                 exit 1
             fi
 
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.HEAD_REF }}
-          fetch-depth: 0
-
       - name: Check if pull request state is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
@@ -103,9 +97,17 @@ jobs:
         run: |
             git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} | tee ${{ env.NEW_COMMITS_FILE }}
 
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.BASE_REF }}
+          fetch-depth: 0
+
       - name: Merge fast forward head ref to base ref 
         run: |
-            echo toto
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git merge origin/${{ env.HEAD_REF }} --ff-only
 
       - name: Close pull request
         run: |
