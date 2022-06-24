@@ -51,7 +51,7 @@ jobs:
             git rebases origin/"${target_branch}" && exit_code=0 || exit_code=1
             echo "exit_code=${exit_code}"
             
-            if [ ${exit_code} -neq 0 ] ; then
+            if [ ${exit_code} -ne 0 ] ; then
                 comment="❌ Rebase ${GITHUB_REPOSITORY_OWNER}/${source_branch} from ${GITHUB_REPOSITORY_OWNER}/${target_branch} fails."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
