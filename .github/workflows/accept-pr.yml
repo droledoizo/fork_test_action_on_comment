@@ -27,12 +27,10 @@ jobs:
             export PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)          
       - name: Clone repo
         run: |
-            echo "PR_STATE=${pr_state}"
-            echo "PR_LOCKED=${pr_locked}"
-            echo "PR_DRAFT=${pr_draft}"
-            echo "PR_MERGEABLE=${pr_mergeable}"         
-            echo "${GITHUB_CONTEXT}"
-            env | sort            
+            echo "PR_STATE=${PR_STATE}"
+            echo "PR_LOCKED=${PR_LOCKED}"
+            echo "PR_DRAFT=${PR_DRAFT}"
+            echo "PR_MERGEABLE=${PR_MERGEABLE}"        
       - name: rebase-from-master
         env:
           GIT_TRACE: true
@@ -43,6 +41,9 @@ jobs:
           PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
+           echo "${GITHUB_CONTEXT}"
+            env | sort
+
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             echo "comment_user_permission=${comment_user_permission}"
