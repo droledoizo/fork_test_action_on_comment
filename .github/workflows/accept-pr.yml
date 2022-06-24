@@ -8,7 +8,7 @@ on:
 jobs:
   rebase:
     name: accept-pr
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
       - name: Checkout the latest code
@@ -24,10 +24,10 @@ jobs:
           REPO: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
-        run: |     
+        run: |
             echo "${GITHUB_CONTEXT}"
             env | sort
-            
+
             echo "> get PR detail"
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
             head_ref=$(jq -rc .head.ref pr_detail.json)
@@ -54,12 +54,12 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1
             fi
-            
+
             echo "> check if pull request is opened and ready"
-            
-            
+
+
             echo "> rebase branch from master"
-            git rebases origin/"${base_ref}" && exit_code=0 || exit_code=1            
+            git rebase origin/"${base_ref}" && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 comment="✅ Rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} succeeds."
                 echo "  - ${comment}"
@@ -69,5 +69,15 @@ jobs:
                 gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 exit ${exit_code}
             fi
-            
+            git push && exit_code=0 || exit_code=1
+            if [ ${exit_code} -eq 0 ] ; then
+                comment="✅ Push rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} succeeds."
+                echo "  - ${comment}"
+            else
+                comment="❌ Push rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} fails."
+                echo "  - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
+                exit ${exit_code}
+            fi
+
             echo "> fast-forward into master"
