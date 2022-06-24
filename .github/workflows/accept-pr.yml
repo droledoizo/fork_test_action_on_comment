@@ -30,13 +30,13 @@ jobs:
             
             echo "> get PR detail"
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
-            source_branch=$(jq -rc .head.ref pr_detail.json)
-            target_branch=$(jq -rc .base.ref pr_detail.json)
+            head_ref=$(jq -rc .head.ref pr_detail.json)
+            base_ref=$(jq -rc .base.ref pr_detail.json)
             pr_state=$(jq -rc .state pr_detail.json)
             pr_locked=$(jq -rc .locked pr_detail.json)
             pr_draft=$(jq -rc .draft pr_detail.json)
             pr_mergeable_state=$(jq -rc .mergeable_statepr_detail.json)
-            env | grep ^pr
+            env | grep pr_
 
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
@@ -55,12 +55,12 @@ jobs:
             
             
             echo "> rebase branch from master"
-            git rebases origin/"${target_branch}" && exit_code=0 || exit_code=1            
+            git rebases origin/"${base_ref}" && exit_code=0 || exit_code=1            
             if [ ${exit_code} -eq 0 ] ; then
-                comment="✅ Rebase ${GITHUB_REPOSITORY_OWNER}/${source_branch} from ${GITHUB_REPOSITORY_OWNER}/${target_branch} succeeds."
+                comment="✅ Rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} succeeds."
                 echo "  - ${comment}"
             else
-                comment="❌ Rebase ${GITHUB_REPOSITORY_OWNER}/${source_branch} from ${GITHUB_REPOSITORY_OWNER}/${target_branch} fails."
+                comment="❌ Rebase ${GITHUB_REPOSITORY_OWNER}/${head_ref} from ${GITHUB_REPOSITORY_OWNER}/${base_ref} fails."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment} Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 exit ${exit_code}
