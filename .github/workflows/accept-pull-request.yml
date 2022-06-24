@@ -66,9 +66,12 @@ jobs:
 
       - name: Check if source branch is rebased from target branch
         run: |
-            touch git_diff.txt
-            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt || true
-            diff_count=$(grep -c ^+ git_diff.txt)
+            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt
+            echo "grep -c"
+            grep -c ^+ git_diff.txt || true
+            echo "exit_code=$?"
+            diff_count=$(grep -c ^+ git_diff.txt || true)
+            echo "${diff_count}"
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
