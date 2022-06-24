@@ -12,6 +12,8 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
       - name: Get PR detail
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
         run: |
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
             export HEAD_REF=$(jq -rc .head.ref pr_detail.json)
