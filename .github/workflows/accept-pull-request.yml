@@ -21,14 +21,17 @@ jobs:
 
       - name: Init all external vars       
         run: |
-            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
-            jq . pr_detail.json
-            echo "REPO_FULL_NAME=$(jq -rc .repo.full_name pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "BASE_REF=$(jq -rc .base.ref pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "PR_STATE=$(jq -rc .state pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" | tee -a $GITHUB_ENV
-            echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" | tee -a $GITHUB_ENV
+            pr_detail_file="pr_detail.json"
+            gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > "${pr_detail_file}"
+            jq . "${pr_detail_file}"
+            echo "REPO_FULL_NAME >>"
+            jq -rc .repo.full_name "${pr_detail_file}"
+            echo "REPO_FULL_NAME=$(jq -rc .repo.full_name ${pr_detail_file})" | tee -a $GITHUB_ENV
+            echo "HEAD_REF=$(jq -rc .head.ref ${pr_detail_file})" | tee -a $GITHUB_ENV
+            echo "BASE_REF=$(jq -rc .base.ref ${pr_detail_file})" | tee -a $GITHUB_ENV
+            echo "PR_STATE=$(jq -rc .state ${pr_detail_file}") | tee -a $GITHUB_ENV
+            echo "PR_DRAFT=$(jq -rc .draft ${pr_detail_file}") | tee -a $GITHUB_ENV
+            echo "PR_MERGEABLE=$(jq -rc .mergeable "${pr_detail_file}")" | tee -a $GITHUB_ENV
             echo "REMAINING_COMMITS_FILE=remaining_commits.txt" | tee -a $GITHUB_ENV            
             echo "NEW_COMMITS_FILE=new_commits.txt" | tee -a $GITHUB_ENV
 
@@ -36,8 +39,7 @@ jobs:
         run: |
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             if [ "${comment_user_permission}" = "admin" ] ; then
-                comment="✅ You are allowed to accept pull request n°${PR_NUMBER}"
-                echo "  - ${comment}"
+                echo "  - ✅ You are allowed to accept pull request n°${PR_NUMBER}"
             else
                 comment="❌ Sorry \`${COMMENT_USER_LOGIN}\`, you are not allowed to accept this pull request because you do not have admin permission (actual permission=${comment_user_permission})."
                 echo "  - ${comment}"
@@ -48,8 +50,7 @@ jobs:
       - name: Check if pull request state is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
-                comment="✅ Pull request is open."
-                echo "  - ${comment}"
+                echo "  - ✅ Pull request is open."
             else
                 comment="❌ Can not accept this pull request because it is not open (actual state=${{ env.PR_STATE }})."
                 echo "  - ${comment}"
@@ -60,8 +61,7 @@ jobs:
       - name: Check if pull request is ready
         run: |
             if [ "${{ env.PR_DRAFT }}" = "false" ] ; then
-                comment="✅ Pull request is not draft."
-                echo "  - ${comment}"
+                echo "  - ✅ Pull request is not draft."
             else
                 comment="❌ Can not accept this pull request because it is still in draft."
                 echo "  - ${comment}"
@@ -72,8 +72,7 @@ jobs:
       - name: Check if pull request is mergeable
         run: |
             if [ "${{ env.PR_MERGEABLE }}" = "true" ] ; then
-                comment="✅ Pull request is mergeable."
-                echo "  - ${comment}"
+                echo "  - ✅ Pull request is mergeable."
             else
                 comment="❌Pull request is not mergeable, please check conflicts with target \`${{ env.BASE_REF }}\` branch and pull request messages."
                 echo "  - ${comment}"
@@ -96,8 +95,7 @@ jobs:
             git log --oneline --cherry source_branch_repo/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee "${{ env.REMAINING_COMMITS_FILE }}"
             diff_count=$(grep -c ^+ ${{ env.REMAINING_COMMITS_FILE }} || true)
             if [ ${diff_count} -eq 0 ] ; then
-                comment="✅ https://github.com/${{ env.REPO_FULL_NAME}}/${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
-                echo "  - ${comment}"
+                echo "  - ✅ https://github.com/${{ env.REPO_FULL_NAME}}/${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
             else
                 comment="❌ You have to rebase your \`https://github.com/${{ env.REPO_FULL_NAME}}/${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`origin/${{ env.BASE_REF }}\` branch:<br>$(echo ; sed "s/+/-/g" ${{ env.REMAINING_COMMITS_FILE }})"
                 echo "  - ${comment}"
@@ -116,8 +114,7 @@ jobs:
             git fetch --all
             git merge source_branch_repo/${{ env.HEAD_REF }} --ff-only && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
-                comment="✅ Merge fast forward succeeds."
-                echo "  - ${comment}"
+                echo "  - ✅ Merge fast forward succeeds."
             else
                 comment="❌ Merge fast forward fails. Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 echo "  - ${comment}"
@@ -126,8 +123,7 @@ jobs:
             fi
             git push && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
-                comment="✅ Push merge fast forward succeeds."
-                echo "  - ${comment}"
+                echo "  - ✅ Push merge fast forward succeeds."
             else
                 comment="❌ Push merge fast forward fails. Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
                 echo "  - ${comment}"
