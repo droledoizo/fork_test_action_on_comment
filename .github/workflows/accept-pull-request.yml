@@ -100,7 +100,7 @@ jobs:
 
       - name: Get new commits list
         run: |
-            git log --oneline --cherry origin/${{ env.BASE_REF }}.origin/${{ env.HEAD_REF }} > new_commits.txt
+            git log --oneline --cherry origin/${{ env.BASE_REF }}...origin/${{ env.HEAD_REF }} > new_commits.txt
             cat new_commits.txt
 
       - name: Merge fast forward head ref to base ref 
