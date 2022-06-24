@@ -30,8 +30,8 @@ jobs:
             
             echo "> get PR detail"
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json
-            source_branch=$(jq .head.ref pr_detail.json)
-            target_branch=$(jq .base.ref pr_detail.json)
+            source_branch=$(jq -rc .head.ref pr_detail.json)
+            target_branch=$(jq -rc .base.ref pr_detail.json)
             echo "source_branch=${source_branch}, target_branch=${target_branch}"
             
             echo "> check if user is allowed to merge"
