@@ -19,12 +19,21 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
 
-      - name: Init all external vars       
+      - name: Init all internal env vars       
         run: |
             pr_detail_file="pr_detail.json"
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > "${pr_detail_file}"
             jq . "${pr_detail_file}"
-            echo "HEAD_REPO_FULL_NAME=$(jq -rc .head.repo.full_name ${pr_detail_file})" | tee -a "${GITHUB_ENV}"
+            HEAD_REPO_FULL_NAME=$(jq -rc .head.repo.full_name ${pr_detail_file})
+            BASE_REPO_FULL_NAME=$(jq -rc .base.repo.full_name ${pr_detail_file})
+            if [ "${HEAD_REPO_FULL_NAME}" = "${BASE_REPO_FULL_NAME}" ] ; then
+                HEAD_TYPE=fork
+            else
+                HEAD_TYPE=origin
+            fi        
+            echo "HEAD_REPO_FULL_NAME=${HEAD_REPO_FULL_NAME}" | tee -a "${GITHUB_ENV}"
+            echo "BASE_REPO_FULL_NAME=${BASE_REPO_FULL_NAME}" | tee -a "${GITHUB_ENV}"
+            echo "HEAD_TYPE=${HEAD_TYPE}" | tee -a "${GITHUB_ENV}"
             echo "HEAD_REF=$(jq -rc .head.ref ${pr_detail_file})" | tee -a "${GITHUB_ENV}"
             echo "BASE_REF=$(jq -rc .base.ref ${pr_detail_file})" | tee -a "${GITHUB_ENV}"
             echo "PR_STATE=$(jq -rc .state ${pr_detail_file})" | tee -a "${GITHUB_ENV}"
@@ -86,11 +95,23 @@ jobs:
 
       - name: Add remote source branch
         run: |
-            git remote add source_branch_repo https://github.com/${{ env.HEAD_REPO_FULL_NAME}}
+            if [ "${{ env.HEAD_TYPE }}" = "fork" ] ; then
+                git remote add fork https://github.com/${{ env.HEAD_REPO_FULL_NAME}}
+                echo "  - ✅ source branch is from fork repo"
+            else
+                echo "  - ✅ source branch is from origin repo"
+            fi
 
       - name: Check if source branch is rebased from target branch 
         run: |
-            git log --oneline --cherry source_branch_repo/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} | tee "${{ env.REMAINING_COMMITS_FILE }}"
+            git log --oneline --cherry ${{ env.HEAD_TYPE }}/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > "${{ env.REMAINING_COMMITS_FILE }}" && exit_code=0 || exit_code=1
+            if [ ${exit_code} -eq 0 ] ; then
+                cat "${{ env.REMAINING_COMMITS_FILE }}"
+            else
+                comment="❌ Rebase check fails. Please refer to ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} logs."
+                gh pr comment "${PR_NUMBER}" --body "${comment}"
+                exit 1
+            fi
             diff_count=$(grep -c ^+ ${{ env.REMAINING_COMMITS_FILE }} || true)
             if [ ${diff_count} -eq 0 ] ; then
                 echo "  - ✅ https://github.com/${{ env.HEAD_REPO_FULL_NAME}}/${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
@@ -103,14 +124,14 @@ jobs:
 
       - name: Get new commits list
         run: |
-            git log --oneline --cherry origin/${{ env.BASE_REF }}...source_branch_repo/${{ env.HEAD_REF }} | tee ${{ env.NEW_COMMITS_FILE }}
+            git log --oneline --cherry origin/${{ env.BASE_REF }}...${{ env.HEAD_TYPE }}/${{ env.HEAD_REF }} | tee ${{ env.NEW_COMMITS_FILE }}
 
       - name: Merge fast forward head ref to base ref 
         run: |
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git fetch --all
-            git merge source_branch_repo/${{ env.HEAD_REF }} --ff-only && exit_code=0 || exit_code=1
+            git merge ${{ env.HEAD_TYPE }}/${{ env.HEAD_REF }} --ff-only && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 echo "  - ✅ Merge fast forward succeeds."
             else
