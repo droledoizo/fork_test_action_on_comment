@@ -28,7 +28,7 @@ jobs:
             echo "BASE_REF=$(jq -rc .base.ref ${pr_detail_file})" | tee -a $GITHUB_ENV
             echo "PR_STATE=$(jq -rc .state ${pr_detail_file}") | tee -a $GITHUB_ENV
             echo "PR_DRAFT=$(jq -rc .draft ${pr_detail_file}") | tee -a $GITHUB_ENV
-            echo "PR_MERGEABLE=$(jq -rc .mergeable "${pr_detail_file}")" | tee -a $GITHUB_ENV
+            echo "PR_MERGEABLE=$(jq -rc .mergeable ${pr_detail_file})" | tee -a $GITHUB_ENV
             echo "REMAINING_COMMITS_FILE=remaining_commits.txt" | tee -a $GITHUB_ENV            
             echo "NEW_COMMITS_FILE=new_commits.txt" | tee -a $GITHUB_ENV
 
