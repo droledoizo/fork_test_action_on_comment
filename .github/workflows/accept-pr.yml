@@ -25,12 +25,14 @@ jobs:
             export PR_LOCKED=$(jq -rc .locked pr_detail.json)
             export PR_DRAFT=$(jq -rc .draft pr_detail.json)
             export PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)          
-      - name: Checkout the latest code
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-          ref: ${HEAD_REF}
+      - name: Clone repo
+        run: |
+            echo "PR_STATE=${pr_state}"
+            echo "PR_LOCKED=${pr_locked}"
+            echo "PR_DRAFT=${pr_draft}"
+            echo "PR_MERGEABLE=${pr_mergeable}"         
+            echo "${GITHUB_CONTEXT}"
+            env | sort            
       - name: rebase-from-master
         env:
           GIT_TRACE: true
@@ -41,13 +43,6 @@ jobs:
           PR_NUMBER: ${{ github.event.issue.number }}
           COMMENT_USER_LOGIN: ${{ github.event.comment.user.login }}
         run: |
-            echo "PR_STATE=${pr_state}"
-            echo "PR_LOCKED=${pr_locked}"
-            echo "PR_DRAFT=${pr_draft}"
-            echo "PR_MERGEABLE=${pr_mergeable}"         
-            echo "${GITHUB_CONTEXT}"
-            env | sort
-
             echo "> check if user is allowed to merge"
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             echo "comment_user_permission=${comment_user_permission}"
