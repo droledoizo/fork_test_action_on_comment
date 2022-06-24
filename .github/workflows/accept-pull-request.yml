@@ -91,7 +91,7 @@ jobs:
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
                 echo "  - ${comment}"
             else
-                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" git_diff.txt)"
+                comment="❌ You have to rebase your \`${{ env.HEAD_REF }}\` branch first because there are new commits pending on target \`${{ env.BASE_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" remaining_commits.txt)"
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit ${diff_count}
