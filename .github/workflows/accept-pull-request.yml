@@ -19,20 +19,7 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/accept'}}
     steps:
 
-      - name: Check comment user permission
-        run: |
-            comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
-            if [ "${comment_user_permission}" = "admin" ] ; then
-                comment="✅ You are allowed to accept PR"
-                echo "  - ${comment}"
-            else
-                comment="❌ Sorry \`${COMMENT_USER_LOGIN}\`, you are not allowed to accept this PR because you do not have admin permission (your actual permission is [${comment_user_permission}])."
-                echo "  - ${comment}"
-                gh pr comment "${PR_NUMBER}" --body "${comment}"
-                exit 1
-            fi
-
-      - name: Get PR details      
+      - name: Get pull request details      
         run: |
             gh api repos/"${OWNER}"/"${REPO}"/pulls/"${PR_NUMBER}" > pr_detail.json          
             echo "HEAD_REF=$(jq -rc .head.ref pr_detail.json)" >> $GITHUB_ENV
@@ -41,20 +28,33 @@ jobs:
             echo "PR_LOCKED=$(jq -rc .locked pr_detail.json)" >> $GITHUB_ENV
             echo "PR_DRAFT=$(jq -rc .draft pr_detail.json)" >> $GITHUB_ENV
             echo "PR_MERGEABLE=$(jq -rc .mergeable pr_detail.json)" >> $GITHUB_ENV
-        
+
+      - name: Check comment user permission
+        run: |
+            comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
+            if [ "${comment_user_permission}" = "admin" ] ; then
+                comment="✅ You are allowed to accept pull request n°${PR_NUMBER}"
+                echo "  - ${comment}"
+            else
+                comment="❌ Sorry \`${COMMENT_USER_LOGIN}\`, you are not allowed to accept this pull request because you do not have admin permission (actual permission=${comment_user_permission})."
+                echo "  - ${comment}"
+                gh pr comment "${PR_NUMBER}" --body "${comment}"
+                exit 1
+            fi
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ env.HEAD_REF }}
           fetch-depth: 0
 
-      - name: Check if PR is open
+      - name: Check if pull request is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
                 comment="✅ Pull request is open."
                 echo "  - ${comment}"
             else
-                  comment="❌ Can not accept this pull request because it is not open (actual state=[${{ env.PR_STATE }}])."
+                  comment="❌ Can not accept this pull request because it is not open (actual state=${{ env.PR_STATE }})."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
@@ -66,7 +66,8 @@ jobs:
 
       - name: Check if source branch is rebased from target branch
         run: |
-            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt
+            touch git_diff.txt
+            git log --oneline --cherry origin/${{ env.HEAD_REF }}...origin/${{ env.BASE_REF }} > git_diff.txt || true
             diff_count=$(grep -c ^+ git_diff.txt)
             if [ ${diff_count} -eq 0 ] ; then
                 comment="✅ ${{ env.HEAD_REF }} is already rebased from ${{ env.BASE_REF }}."
