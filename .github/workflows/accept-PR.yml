@@ -71,9 +71,8 @@ jobs:
 
       - name: Rebase head ref from base ref
         run: |
-            set -x
-            git branch
-            git status
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
             git rebase origin/${{ env.BASE_REF }} && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 comment="✅ Rebase ${GITHUB_REPOSITORY_OWNER}/${{ env.HEAD_REF }} from ${GITHUB_REPOSITORY_OWNER}/${{ env.BASE_REF }} succeeds."
