@@ -50,11 +50,11 @@ jobs:
 
       - name: Check if PR is open
         run: |
-            if [ "${{ env.PR_STATE }}" = "opene" ] ; then
+            if [ "${{ env.PR_STATE }}" = "open" ] ; then
                 comment="✅ Pull request is open."
                 echo "  - ${comment}"
             else
-                  comment="❌ Can not accept this pull request since it is not open (actual state=[${{ env.PR_STATE }}])."
+                  comment="❌ Can not accept this pull request because it is not open (actual state=[${{ env.PR_STATE }}])."
                 echo "  - ${comment}"
                 gh pr comment "${PR_NUMBER}" --body "${comment}"
                 exit 1         
