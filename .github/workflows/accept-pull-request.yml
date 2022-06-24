@@ -107,4 +107,4 @@ jobs:
 
       - name: Close pull request
         run: |
-            gh pr comment "${PR_NUMBER}" --body "✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge, appending thoses commits to \`${{ env.HEAD_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" news_commits.txt)"
+            gh pr comment "${PR_NUMBER}" --body "✅ Pull request accepted and closed by \`${COMMENT_USER_LOGIN}\` with fast forward merge, appending thoses commits to \`${{ env.HEAD_REF }}\` branch:<br><br>$(echo ; sed "s/+/-/g" new_commits.txt)"
