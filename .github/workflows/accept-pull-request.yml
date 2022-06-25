@@ -97,7 +97,7 @@ jobs:
         run: |
             if [ "${{ env.HEAD_TYPE }}" = "fork" ] ; then
                 git remote add fork https://github.com/${{ env.HEAD_REPO_FULL_NAME}}
-                git remote list
+                git remote --verbose
                 git fetch --all
                 echo "  - ✅ source branch is from fork repo"
             else
