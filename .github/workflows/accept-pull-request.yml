@@ -46,7 +46,7 @@ jobs:
         run: |
             comment_user_permission=$(gh api repos/"${OWNER}"/"${REPO}"/collaborators/lepapareil/permission -q .permission)
             if [ "${comment_user_permission}" = "admin" ] ; then
-                echo "  - ✅ You are allowed to accept pull request n°${PR_NUMBER}"
+                echo "  - ✅ You have the ${comment_user_permission} permission then you are allowed to accept pull request n°${PR_NUMBER}"
             else
                 comment="❌ Sorry \`${COMMENT_USER_LOGIN}\`, you are not allowed to accept this pull request because you do not have admin permission (actual permission=${comment_user_permission})."
                 echo "  - ${comment}"
@@ -57,7 +57,7 @@ jobs:
       - name: Check if pull request state is open
         run: |
             if [ "${{ env.PR_STATE }}" = "open" ] ; then
-                echo "  - ✅ Pull request is open."
+                echo "  - ✅ Pull request is ${{ env.PR_STATE }}."
             else
                 comment="❌ Can not accept this pull request because it is not open (actual state=${{ env.PR_STATE }})."
                 echo "  - ${comment}"
@@ -68,7 +68,7 @@ jobs:
       - name: Check if pull request is ready
         run: |
             if [ "${{ env.PR_DRAFT }}" = "false" ] ; then
-                echo "  - ✅ Pull request is not draft."
+                echo "  - ✅ Pull request draft state is ${{ env.PR_DRAFT }}."
             else
                 comment="❌ Can not accept this pull request because it is still in draft."
                 echo "  - ${comment}"
@@ -79,7 +79,7 @@ jobs:
       - name: Check if pull request is mergeable
         run: |
             if [ "${{ env.PR_MERGEABLE }}" = "true" ] ; then
-                echo "  - ✅ Pull request is mergeable."
+                echo "  - ✅ Pull request mergeable state is ${{ env.PR_MERGEABLE }}."
             else
                 comment="❌Pull request is not mergeable, please check conflicts with target \`${{ env.BASE_REF }}\` branch and pull request messages."
                 echo "  - ${comment}"
@@ -97,6 +97,8 @@ jobs:
         run: |
             if [ "${{ env.HEAD_TYPE }}" = "fork" ] ; then
                 git remote add fork https://github.com/${{ env.HEAD_REPO_FULL_NAME}}
+                git remote list
+                git fetch --all
                 echo "  - ✅ source branch is from fork repo"
             else
                 echo "  - ✅ source branch is from origin repo"
@@ -129,7 +131,6 @@ jobs:
         run: |
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
-            git fetch --all
             git merge ${{ env.HEAD_TYPE }}/${{ env.HEAD_REF }} --ff-only && exit_code=0 || exit_code=1
             if [ ${exit_code} -eq 0 ] ; then
                 echo "  - ✅ Merge fast forward succeeds."
